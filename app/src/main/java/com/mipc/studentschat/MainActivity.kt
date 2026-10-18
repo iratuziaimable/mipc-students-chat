@@ -112,7 +112,7 @@ class MainActivity : Activity() {
         val search = EditText(this).apply {
             hint = "🔍  Search conversations"
             textSize = 15f
-            singleLine = true
+            setSingleLine(true)
             setPadding(dp(14), 0, dp(14), 0)
             background = rounded(Color.WHITE, 24)
         }
