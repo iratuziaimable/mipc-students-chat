@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "661049544027",
+    "project_id": "mipc-students-chat",
+    "storage_bucket": "mipc-students-chat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661049544027:android:d1604006b74f33b7e19e7e",
+        "android_client_info": {
+          "package_name": "com.mipc.studentschat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL9yHN2nS5OnYhVxNCJFpqYKsxCwUpx1g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
