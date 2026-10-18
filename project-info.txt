@@ -1,0 +1,4 @@
+PROJECT=MIPC Students Chat
+PLATFORM=Android
+DEVELOPER=Aimable
+BUILD=GitHub Actions
