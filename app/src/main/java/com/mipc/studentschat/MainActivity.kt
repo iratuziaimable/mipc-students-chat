@@ -9,6 +9,13 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import java.util.concurrent.TimeUnit
+import import com.google.firebase.auth.PhoneAuthProvider
+import import com.google.firebase.auth.PhoneAuthOptions
+import import com.google.firebase.auth.PhoneAuthCredential
+import import com.google.firebase.auth.FirebaseAuth
+import import com.google.firebase.FirebaseException
+import import android.text.InputType
 
 class MainActivity : Activity() {
 
@@ -19,6 +26,11 @@ class MainActivity : Activity() {
     private lateinit var content: LinearLayout
     private lateinit var pageTitle: TextView
     private var currentTab = "Chats"
+
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private var verificationId: String? = null
+    private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
+
 
     private data class Chat(
         val name: String,
@@ -42,7 +54,11 @@ class MainActivity : Activity() {
         window.statusBarColor = green
         window.navigationBarColor = Color.WHITE
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-        showHome()
+        if (auth.currentUser != null) {
+            showHome()
+        } else {
+            showLogin()
+        }
     }
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
@@ -81,6 +97,161 @@ class MainActivity : Activity() {
         val t = text(value, size, color, bold)
         parent.addView(t)
         return t
+    }
+
+
+    private fun showLogin() {
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+            setBackgroundColor(Color.WHITE)
+        }
+
+        val title = text("MIPC Students Chat", 27f, green, true)
+        title.gravity = Gravity.CENTER
+        root.addView(title)
+
+        val subtitle = text("Injira ukoresheje nimero ya telefone", 16f, muted)
+        subtitle.gravity = Gravity.CENTER
+        val subtitleParams = LinearLayout.LayoutParams(-1, -2)
+        subtitleParams.topMargin = dp(12)
+        root.addView(subtitle, subtitleParams)
+
+        val phone = EditText(this).apply {
+            hint = "Urugero: +2507XXXXXXXX"
+            textSize = 16f
+            inputType = InputType.TYPE_CLASS_PHONE
+            setSingleLine(true)
+        }
+        val phoneParams = LinearLayout.LayoutParams(-1, -2)
+        phoneParams.topMargin = dp(28)
+        root.addView(phone, phoneParams)
+
+        val send = Button(this).apply {
+            text = "Ohereza kode ya SMS"
+            isAllCaps = false
+        }
+        val sendParams = LinearLayout.LayoutParams(-1, -2)
+        sendParams.topMargin = dp(18)
+        root.addView(send, sendParams)
+
+        val note = text(
+            "Andika nimero iriho country code, urugero +250. Firebase ishobora kugenzura app mbere yo kohereza SMS.",
+            13f, muted
+        )
+        note.gravity = Gravity.CENTER
+        val noteParams = LinearLayout.LayoutParams(-1, -2)
+        noteParams.topMargin = dp(14)
+        root.addView(note, noteParams)
+
+        send.setOnClickListener {
+            val number = phone.text.toString().trim()
+            if (!number.matches(Regex("^\\+[1-9][0-9]{7,14}$"))) {
+                phone.error = "Andika nimero yuzuye, urugero +2507XXXXXXXX"
+                return@setOnClickListener
+            }
+            startPhoneVerification(number)
+        }
+
+        setContentView(root)
+    }
+
+    private fun startPhoneVerification(number: String) {
+        Toast.makeText(this, "Turimo gutegura SMS verification...", Toast.LENGTH_SHORT).show()
+
+        val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                signInWithPhoneCredential(credential)
+            }
+
+            override fun onVerificationFailed(e: FirebaseException) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Verification yanze: ${e.localizedMessage ?: "ongera ugerageze"}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            override fun onCodeSent(
+                id: String,
+                token: PhoneAuthProvider.ForceResendingToken
+            ) {
+                verificationId = id
+                resendToken = token
+                showOtp()
+            }
+        }
+
+        val options = PhoneAuthOptions.newBuilder(auth)
+            .setPhoneNumber(number)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(this)
+            .setCallbacks(callbacks)
+            .build()
+
+        PhoneAuthProvider.verifyPhoneNumber(options)
+    }
+
+    private fun showOtp() {
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+            setBackgroundColor(Color.WHITE)
+        }
+
+        val title = text("Emeza nimero yawe", 25f, green, true)
+        title.gravity = Gravity.CENTER
+        root.addView(title)
+
+        val code = EditText(this).apply {
+            hint = "Kode ya SMS"
+            textSize = 20f
+            gravity = Gravity.CENTER
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setSingleLine(true)
+        }
+        val codeParams = LinearLayout.LayoutParams(-1, -2)
+        codeParams.topMargin = dp(24)
+        root.addView(code, codeParams)
+
+        val verify = Button(this).apply {
+            text = "Emeza kode"
+            isAllCaps = false
+        }
+        val verifyParams = LinearLayout.LayoutParams(-1, -2)
+        verifyParams.topMargin = dp(16)
+        root.addView(verify, verifyParams)
+
+        verify.setOnClickListener {
+            val otp = code.text.toString().trim()
+            val id = verificationId
+            if (otp.length < 4 || id == null) {
+                code.error = "Andika kode wahawe kuri SMS"
+                return@setOnClickListener
+            }
+            val credential = PhoneAuthProvider.getCredential(id, otp)
+            signInWithPhoneCredential(credential)
+        }
+
+        setContentView(root)
+    }
+
+    private fun signInWithPhoneCredential(credential: PhoneAuthCredential) {
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "Winjiye neza!", Toast.LENGTH_SHORT).show()
+                    showHome()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Kwinjira byanze: ${task.exception?.localizedMessage ?: "ongera ugerageze"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
     }
 
     private fun showHome() {
