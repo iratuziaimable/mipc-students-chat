@@ -5,17 +5,17 @@ import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import java.util.concurrent.TimeUnit
-import import com.google.firebase.auth.PhoneAuthProvider
-import import com.google.firebase.auth.PhoneAuthOptions
-import import com.google.firebase.auth.PhoneAuthCredential
-import import com.google.firebase.auth.FirebaseAuth
-import import com.google.firebase.FirebaseException
-import import android.text.InputType
 
 class MainActivity : Activity() {
 
