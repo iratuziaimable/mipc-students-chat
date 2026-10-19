@@ -183,14 +183,24 @@ class MainActivity : Activity() {
             }
         }
 
-        val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber(number)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(this)
-            .setCallbacks(callbacks)
-            .build()
+        try {
+            val options = PhoneAuthOptions.newBuilder(auth)
+                .setPhoneNumber(number)
+                .setTimeout(60L, TimeUnit.SECONDS)
+                .setActivity(this)
+                .setCallbacks(callbacks)
+                .build()
 
-        PhoneAuthProvider.verifyPhoneNumber(options)
+            PhoneAuthProvider.verifyPhoneNumber(options)
+        } catch (e: Exception) {
+            val error = "${e.javaClass.simpleName}: ${e.localizedMessage ?: "Ikosa ritazwi"}"
+            android.util.Log.e("MIPC_PHONE_AUTH", error, e)
+            Toast.makeText(
+                this,
+                "Ikosa: $error",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun showOtp() {
