@@ -2,7 +2,7 @@ name: Build MIPC Students Chat APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, redesign/mipc-chat-2.0]
   workflow_dispatch:
 
 permissions:
